@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+ <mapper namespace="com.jiang.dao.OrderMapper">
+ 	
+ 	<resultMap type="com.jiang.beans.Order" id="orderInfo">
+ 		<id column="order_id" property="orderId"/>
+ 		<result column="order_paycustomer" property="orderPaycustomerId"/>
+ 		<result column="order_createtime" property="orderCreatetime"/>
+ 		<result column="order_paytime" property="orderPaytime"/>
+ 		<result column="order_status" property="orderStatus"/>
+ 		<result column="order_comment" property="orderComment"/>
+ 		<result column="order_address" property="orderAddress"/>
+ 		<result column="order_totalprice" property="orderTotalprice"/>
+ 		<result column="order_paytype" property="orderPaytype"/>
+ 		
+ 		<collection property="orderoptList" column="order_id"
+ 			select="com.jiang.dao.OrderoptMapper.findListByOrderId"/>
+ 		
+ 	</resultMap>
+ 	
+ 	<sql id="baseColumn">
+ 		order_id,order_paycustomer,order_createtime,order_paytime,order_status,
+ 		order_comment,order_address,order_totalprice,order_paytype
+ 	</sql>
+ 	
+ 	<!-- 创建一条订单 -->
+ 	<insert id="insterOrder" parameterType="com.jiang.beans.Order">
+ 	insert into jsn_order(<include refid="baseColumn"/>) 
+ 	values(#{orderId},#{orderPaycustomerId},SYSDATE(),#{orderPaytime},#{orderStatus},
+ 	#{orderComment},#{orderAddress},#{orderTotalprice},#{orderPaytype})
+ 	</insert>
+ 	
+ 	<!-- 按编号查询出订单 -->
+ 	<select id="findById" resultMap="orderInfo">
+ 		select <include refid="baseColumn"/> from jsn_order where order_id = #{orderId}
+ 	</select>
+ 	
+ 	<!-- 更新一条订单 -->
+ 	<update id="updateOrder" parameterType="com.jiang.beans.Order">
+ 		update jsn_order
+ 		<set>
+			<if test="orderPaytime!=null">
+			 	order_paytime=#{orderPaytime},
+			</if>
+			<if test="orderStatus!=null">
+			 	order_status=#{orderStatus},
+			</if>
+			<if test="orderComment!=null">
+			 	order_comment=#{orderComment},
+			</if>
+			<if test="orderAddress!=null">
+			 	order_address=#{orderAddress},
+			</if>
+			<if test="orderTotalprice!=null">
+			 	order_totalprice=#{orderTotalprice},
+			</if>
+			<if test="orderPaytype!=null">
+			 	order_paytype=#{orderPaytype}
+			</if>
+	 	</set>	
+	 	where order_id=#{orderId}
+ 	</update>
+ 	
+ </mapper>

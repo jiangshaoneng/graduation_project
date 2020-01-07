@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+
+	<!-- 只扫描控制器 -->
+	<context:component-scan base-package="com.jiang" use-default-filters="false">
+		<context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+	</context:component-scan>
+	
+	<!-- 拦截器的配置 -->
+	<mvc:interceptors>
+		<!-- 前台商城的拦截器 -->
+		<mvc:interceptor>
+			<!-- 拦截的请求 -->
+			<mvc:mapping path="/**"/>
+			<!-- 不进行拦截的请求 -->
+			<mvc:exclude-mapping path="/customerLogin.jsp"/>
+			<mvc:exclude-mapping path="/customerRegister.jsp"/>
+			<mvc:exclude-mapping path="/manageLogin.jsp"/>
+			<mvc:exclude-mapping path="/showIndex"/>
+			<mvc:exclude-mapping path="/showGoodsDetail/*"/>
+			<mvc:exclude-mapping path="/nofilter_*"/>
+			<!-- 不拦截静态资源 -->
+			<mvc:exclude-mapping path="/css/*"/>
+			<mvc:exclude-mapping path="/js/*"/>
+			<mvc:exclude-mapping path="/img/*"/>
+			<mvc:exclude-mapping path="/fonts/*"/>
+			<mvc:exclude-mapping path="/images/*"/>
+			<mvc:exclude-mapping path="/goodsImgs/*"/>
+			<!-- 不拦截后台 -->
+			<mvc:exclude-mapping path="/manage_*"/>
+			<mvc:exclude-mapping path="/pages/manage/**"/>
+			<bean class="com.jiang.utils.JiangInterceptor" />
+		</mvc:interceptor>
+		
+		<!-- 管理系统的拦截器 -->
+		<mvc:interceptor>
+			<mvc:mapping path="/manage_*"/>
+			<mvc:mapping path="/pages/manage/*.html"/>
+			<mvc:exclude-mapping path="/manage_login"/>
+			<mvc:exclude-mapping path="/manage_logout"/>
+			<bean class="com.jiang.utils.ManageInterceptor"></bean>
+		</mvc:interceptor>
+	</mvc:interceptors>
+	
+	<!-- 文件上传：这里的id要用这个 id="multipartResolver"-->
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="maxUploadSize" value="500000000"/>
+		<property name="defaultEncoding" value="utf-8" />
+		<property name="resolveLazily" value="true"/>
+	</bean>
+	
+	<!-- 配置视图解析器 -->
+	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/pages/"></property>
+		<property name="suffix" value=".jsp"></property>
+	</bean>
+	
+	<mvc:annotation-driven>
+     <mvc:message-converters>
+        <bean class="org.springframework.http.converter.StringHttpMessageConverter">
+            <property name="supportedMediaTypes">
+                <list>
+                    <value>text/plain;charset=UTF-8</value>
+                    <value>text/html;charset=UTF-8</value>
+                </list>
+            </property>
+        </bean>
+        <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+            <property name="supportedMediaTypes">
+                <list>
+                    <value>application/json; charset=UTF-8</value>
+                    <value>application/x-www-form-urlencoded; charset=UTF-8</value>
+                </list>
+            </property>
+           <!--  配置 objectMapper 为我们自定义扩展后的 CustomMapper -->
+            <property name="objectMapper">
+                <bean class="com.jiang.utils.CustomMapper"></bean>
+            </property>
+        </bean>
+    </mvc:message-converters>
+	</mvc:annotation-driven>
+	
+	<mvc:default-servlet-handler/>
+</beans>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>订单管理</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+	<link type="text/css" href="css/pagination.css" rel="stylesheet" />
+    <!-- Add custom CSS here -->
+    <link href="css/sb-admin.css" rel="stylesheet">
+	<style type="text/css">
+    input {
+		margin:0px;
+	}
+    </style>
+  </head>
+
+  <body>
+
+    <div id="wrapper">
+
+      <!-- Sidebar -->
+      <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <span id="admin"></span>
+        </div>
+
+        <div class="collapse navbar-collapse navbar-ex1-collapse">
+          <ul class="nav navbar-nav side-nav">
+            <li><a href="manageNotice.html"><span class="glyphicon glyphicon-bullhorn"></span> 公告管理</a></li>
+            <li><a href="manageCustomer.html"><span class="glyphicon glyphicon-user"></span> 用户管理</a></li>
+            <li><a href="manageGoods.html"><span class="glyphicon glyphicon glyphicon-align-justify"></span></i> 商品管理</a></li>
+            <li  class="active"><a href="manageOrderopt.html"><span class="glyphicon glyphicon-list-alt"></span> 订单管理</a></li>
+          </ul>
+        </div>
+      </nav>
+
+      <div id="page-wrapper">
+		<!-- 查询条件 -->
+		<div class="col-lg-12">
+			<!-- <form class="form-inline" role="form"> -->
+			   <div class="form-group col-lg-3">
+			    <input type="text" class="form-control" id="orderoptId" placeholder="订单编号">
+			  </div>
+			  <div class="form-group col-lg-3">
+			    <select class="form-control" id="orderoptStatus">
+			    	<option value="">状态</option>
+			    	<option value="待付款">待付款</option>
+			    	<option value="待发货">待发货</option>
+			    	<option value="待收货">待收货</option>
+			    	<option value="待评价">待评价</option>
+			    	<option value="已完成">已完成</option>
+			    	<option value="已取消">已取消</option>
+			    </select>
+			  </div>
+			  <div class="form-group col-lg-3">
+			    <input type="date" class="form-control" id="startTime">
+			  </div>
+			  <div class="form-group col-lg-3">
+			    <input type="date" class="form-control" id="endTime">
+			  </div>
+			  <div class="form-group col-lg-3">
+				  <button type="button" class="btn btn-primary btn-block" onclick="showOrderopt(1)">查询</button>
+			  </div>
+			<!-- </form> -->
+		</div>
+		<hr>
+		<!-- 查询结果 -->
+		<div class="col-lg-12">
+			<div class="table-responsive">
+              <table class="table table-bordered table-hover tablesorter">
+                <thead>
+                  <tr>
+                    <th width="15%">编号</th>
+                    <th width="20%">商品名称</th>
+                    <th width="9%">单价(元)</th>
+                    <th width="5%">数量</th>
+					<th width="10%">总价</th>                    
+                    <th width="9%">购买方</th>
+                    <th width="9%">出售方</th>
+                    <th width="8%">状态</th>
+                    <th width="15%">操作时间</th>                    
+                  </tr>
+                </thead>
+                <tbody id="dataInfo"></tbody>
+              </table>
+             </div>
+			<div class="M-box3" style="margin: 10px auto; width: 80%;"></div>
+		</div>
+	  </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/jquery-1.10.2.js"></script>
+    <script src="js/bootstrap.js"></script>
+	<script type="text/javascript" src="js/jquery.pagination.js"></script>
+	<script type="text/javascript">
+	$(function(){
+		getSessionInfo();
+		showOrderopt(1);
+	})
+	
+	//获取admin信息
+		function getSessionInfo(){
+			$.ajax({
+				type : "post", //提交方式 
+				url : "/graduation_project/manage_getSession",//路径
+				dateType : "JSON",//返回的数据类型
+				data : {},
+				success : function(data) {
+					if(typeof(data.adminName)!="undefined"){
+						var temp = "<span class='navbar-brand'>管理员："+data.adminName+"</span>";
+						temp += "<a class='navbar-brand' href='/graduation_project/manage_logout'>安全退出</a>";
+						$("#admin").html(temp);
+					}
+					
+				}
+			});
+		}	
+	
+	//ajax分页查询
+	function showOrderopt(currentPageNo){
+		//获取查询条件
+		var orderoptId = $("#orderoptId").val();
+		var orderoptStatus = $("#orderoptStatus").val();
+		var startTime = $("#startTime").val();
+		var endTime = $("#endTime").val();
+		
+		$.ajax({
+			type : "post", //提交方式 
+			url : "/graduation_project/manage_findOrderopt",//路径
+			dateType : "JSON",//返回的数据类型
+			data : {
+				"orderoptId":orderoptId,
+				"orderoptStatus":orderoptStatus,
+				"startTime":startTime,
+				"endTime":endTime,
+				"pageNo" : currentPageNo
+			},
+			success : function(data) {
+				console.log(data);
+				var orderopt = data.list;
+				var temp = "";
+				for(var index in orderopt){
+					temp += "<tr>";
+					temp += "<td>"+orderopt[index].orderoptId+"</td>";
+					temp += "<td>"+orderopt[index].orderoptGoods.goodsName+"</td>";
+					temp += "<td>"+orderopt[index].orderoptGoods.goodsPrice+"</td>";
+					temp += "<td>"+orderopt[index].orderoptNum+"</td>";
+					temp += "<td>"+orderopt[index].orderoptPrice+"</td>";
+					temp += "<td>"+orderopt[index].orderoptGoods.goodsCustomer.cusRealname+"</td>";
+					temp += "<td>"+orderopt[index].orderoptPaycustomer.cusRealname+"</td>";
+					temp += "<td>"+orderopt[index].orderoptStatus+"</td>";
+					temp += "<td>"+orderopt[index].orderoptEdittime+"</td>";
+					temp += "</tr>";
+				}
+				$("#dataInfo tr").remove();
+				$("#dataInfo").html(temp); 
+				choosePage(data);
+			}
+		});
+	}
+	
+	//choosePage
+	function choosePage(data){
+		$('.M-box3').pagination({
+			pageCount:data.totalPage,
+			current:data.currentPageNo,
+			isHide : false,
+			jump : true,
+			coping : true,
+			count : 3,
+			showData : 5,
+			homePage : '首页',
+			endPage : '末页',
+			prevContent : '上页',
+			nextContent : '下页',
+			callback : function(api) {
+				//将选择的页码传给AJAX
+				var currentPageNo = api.getCurrent();
+				flagPage = currentPageNo;
+				showOrderopt(currentPageNo);
+			}
+		})
+	}
+	
+	</script>
+	
+  </body>
+</html>

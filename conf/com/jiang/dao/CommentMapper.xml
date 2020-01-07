@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+ <mapper namespace="com.jiang.dao.CommentMapper">
+ 
+ <!-- /**查询一件商品的留言数*/ -->
+ <select id="findCountByGoodsId" resultType="int">
+ 	SELECT COUNT(*) FROM jsn_comment WHERE comment_goods = #{goodsId}
+ </select>
+ 
+ <!-- /**查询一件商品的所有留言(分页)：商品编号,当前页的起始页,当前页的条数*/ -->
+ <resultMap type="com.jiang.beans.Comment" id="commentInfo">
+ 		<id column="comment_id" property="commentId"/>
+ 		<result column="comment_info" property="commentInfo"/>
+ 		<result column="comment_addtime" property="commentAddtime"/>
+ 		<!-- 评论者 -->
+ 		<association property="commentCustomer" 
+ 			select="com.jiang.dao.CustomerMapper.findCustomerById" 
+ 			column="comment_customer" fetchType="lazy">
+ 		</association>
+  </resultMap>
+  <select id="findPageCommentByGoodsId" resultMap="commentInfo">
+ 	SELECT 
+ 		comment_id,comment_customer,comment_goods,comment_info,comment_addtime
+ 	FROM 
+ 		jsn_comment 
+ 	WHERE 
+ 		 comment_goods = #{0} 
+ 	ORDER BY 
+ 		comment_addtime DESC 
+ 	LIMIT 
+ 		#{1},#{2} 
+ </select>
+ 
+ <!-- /**删除评论:通过评论编号*/ -->
+ <delete id="delCommentById">
+ 	DELETE FROM jsn_comment WHERE comment_id = #{commentId}
+ </delete>
+ 
+ <!-- 添加评论 -->
+ <insert id="addComment" parameterType="com.jiang.beans.Comment">
+ 	INSERT INTO jsn_comment
+ 			(comment_id,comment_customer,comment_goods,comment_info,comment_addtime) 
+ 	VALUES 
+ 			(#{commentId},#{commentCustomer.cusId},#{commentGoods.goodsId},#{commentInfo},SYSDATE());
+ </insert>
+ 
+ 
+ </mapper>

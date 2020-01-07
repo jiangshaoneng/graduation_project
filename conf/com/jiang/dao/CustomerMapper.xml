@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+ <mapper namespace="com.jiang.dao.CustomerMapper">
+ 	
+ 	<sql id="baseColumn">
+ 		cus_id,cus_name,cus_password,cus_realname,cus_gender,cus_phone,cus_email,
+ 		cus_balance,cus_birthday,DATE_FORMAT(cus_regtime,'%Y-%m-%d') as cus_regtime,cus_status,cus_type,cus_score
+ 	</sql>
+ 	
+ <!-- 通过用户名查询用户的  编号,用户名,密码 -->
+<select id="findCustomerByName" resultType="com.jiang.beans.Customer">
+ 	SELECT 
+ 		<include refid="baseColumn"/>
+ 	FROM 
+ 		jsn_customer 
+ 	WHERE
+ 		cus_name=#{cusName}
+ </select>
+ 
+ <!-- /**通过顾客编号,修改用户的信息*/ -->
+ <update id="updateCustomer" parameterType="com.jiang.beans.Customer">
+ 	UPDATE jsn_customer SET 
+ 	<trim suffixOverrides=",">
+ 		<if test="cusType!=null">cus_type=#{cusType},</if>
+		<if test="cusName!=null">cus_name=#{cusName},</if>
+		<if test="cusGender!=null">cus_gender=#{cusGender},</if>
+		<if test="cusBirthday!=null">cus_birthday=#{cusBirthday},</if>
+		<if test="cusPhone!=null">cus_phone=#{cusPhone},</if>
+		
+		<if test="cusPassword!=null">cus_password=#{cusPassword},</if>
+		
+		<if test="cusBalance!=null">cus_balance=#{cusBalance},</if>
+		<if test="cusScore!=null">cus_score=#{cusScore},</if>
+		
+		<if test="cusEmail!=null">cus_email=#{cusEmail}</if>
+	</trim>
+ 	WHERE cus_id = #{cusId}
+ </update>
+ 
+  <!-- /**通过顾客编号,修改用户状态*/ -->
+ <update id="freezeCustomer" parameterType="com.jiang.beans.Customer">
+ 	UPDATE jsn_customer SET cus_status = #{0} WHERE cus_id = #{1}
+ </update>
+ 
+ <!-- 注册用户信息：第一步	注意：用户的地址注册时需要单独插入 jsn_address表 在逻辑代码中实现 -->
+ <insert id="addCustomer" parameterType="com.jiang.beans.Customer">
+ 	INSERT INTO 
+ 			jsn_customer 
+ 			(cus_id,cus_name,cus_realname,cus_password,cus_gender,cus_phone,cus_birthday,
+ 			cus_regtime,cus_status,cus_type) 
+ 		VALUES 
+ 			(#{cusId},#{cusName},#{cusRealname},#{cusPassword},#{cusGender},#{cusPhone},#{cusBirthday},
+ 			SYSDATE(),#{cusStatus},#{cusType})
+ </insert>
+ 
+ <!-- /**通过用户编号查找查用户：级联查询出顾客的地址*/ -->
+ <resultMap type="com.jiang.beans.Customer" id="customerInfo">
+ 	<id column="cus_id" property="cusId"/>
+ 	<result column="cus_name" property="cusName"/>
+ 	<result column="cus_password" property="cusPassword"/>
+ 	<result column="cus_realname" property="cusRealname"/>
+ 	<result column="cus_gender" property="cusGender"/>
+ 	<result column="cus_phone" property="cusPhone"/>
+ 	<result column="cus_email" property="cusEmail"/>
+ 	<result column="cus_balance" property="cusBalance"/>
+ 	<result column="cus_birthday" property="cusBirthday"/>
+ 	<result column="cus_regtime" property="cusRegtime"/>
+ 	<result column="cus_status" property="cusStatus"/>
+ 	<result column="cus_type" property="cusType"/>
+ 	<result column="cus_score" property="cusScore"/>
+ 	<!-- 级联查询出顾客的地址 -->
+ 	<collection property="address" 
+ 		select="com.jiang.dao.AddressMapper.findAddressByCusId" 
+ 		column="cus_id" fetchType="lazy">
+ 	</collection>
+ </resultMap>
+ 
+ <select id="findCustomerById" resultMap="customerInfo">
+ 	SELECT 
+ 		<include refid="baseColumn"/>
+ 	FROM 
+ 		jsn_customer 
+ 	WHERE
+ 		cus_id=#{cusId}
+ </select>
+ 
+ <!-- 管理员查询用户数量 -->
+ <select id="manageFindCustomerCount" resultType="int" parameterType="Map">
+ 	SELECT count(*) FROM jsn_customer WHERE 1 = 1
+ 	<if test="cusId!=null">and cus_id like #{cusId}</if>
+ 	<if test="cusRealname!=null">and cus_realname like #{cusRealname}</if>
+ 	<if test="cusType!=null">and cus_gender = #{cusType}</if>
+ 	<if test="cusStatus!=null">and cus_status = #{cusStatus}</if>
+ 	<if test="startTime!=null">and cus_regtime &gt;= #{startTime}</if>
+ 	<if test="endTime!=null">and cus_regtime &lt;= #{endTime}</if>
+ </select>
+ 
+ <!-- 管理员查询用户 -->
+ <select id="manageFindCustomer" resultMap="customerInfo" parameterType="Map">
+ 	SELECT <include refid="baseColumn"/> FROM jsn_customer WHERE 1 = 1
+ 	<if test="cusId!=null">and cus_id like #{cusId}</if>
+ 	<if test="cusRealname!=null">and cus_realname like #{cusRealname}</if>
+ 	<if test="cusType!=null">and cus_type = #{cusType}</if>
+ 	<if test="cusStatus!=null">and cus_status = #{cusStatus}</if>
+ 	<if test="startTime!=null">and cus_regtime &gt;= #{startTime}</if>
+ 	<if test="endTime!=null">and cus_regtime &lt;= #{endTime}</if>
+ 	ORDER BY cus_regtime DESC LIMIT #{currentPageStart},#{currentPageNum}
+ </select>
+ 
+ </mapper>

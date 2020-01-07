@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+ <mapper namespace="com.jiang.dao.GuessMapper">
+ 	
+ 	<sql id="baseColumn">guess_id,guess_keyword,guess_time,guess_customer</sql>
+ 	
+ 	<resultMap id="baseMap" type="com.jiang.beans.Guess" >
+ 		<id column="guess_id" property="guessId"/>
+ 		<result column="guess_keyword" property="guessKeyword"/>
+ 		<result column="guess_time" property="guessTime"/>
+ 		<result column="guess_customer" property="guessCustomerId"/>
+ 	</resultMap>
+ 	
+ 	<insert id="insert" parameterType="com.jiang.beans.Guess">
+ 		INSERT INTO 
+ 			jsn_guess (<include refid="baseColumn"/>) 
+ 		VALUES
+ 			(#{guessId},#{guessKeyword},SYSDATE(),#{guessCustomerId});
+ 	</insert>
+ 	
+ 	<select id="findListBycusId" resultMap="baseMap" parameterType="java.lang.String">
+ 		select 
+ 			 DISTINCT(guess_keyword) as guess_keyword
+ 		from 
+ 			jsn_guess
+ 		where 
+ 			guess_customer = #{cusId}
+ 		order by guess_time desc limit 0,4
+ 	</select>
+ 
+ </mapper>

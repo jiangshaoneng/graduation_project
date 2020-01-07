@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+ <mapper namespace="com.jiang.dao.AddressMapper">
+ 	
+ 	<sql id="baseColumn">
+ 		address_id,address_customer,address_default,
+ 		address_province,address_city,address_district,address_descinfo
+ 	</sql>
+ 	
+ 	<resultMap type="com.jiang.beans.Address" id="baseMap">
+ 		<id column="address_id" property="addressId"/>
+ 		<result column="address_customer" property="addressCustomerId"/>
+ 		<result column="address_default" property="addressDefault"/>
+ 		<result column="address_province" property="addressProvince"/>
+ 		<result column="address_city" property="addressCity"/>
+ 		<result column="address_district" property="addressDistrict"/>
+		<result column="address_descinfo" property="addressDescInfo"/>
+ 	</resultMap>
+ 	
+ 	<!-- /**通过顾客的编号查询该顾客的所有地址*/ -->
+ 	<select id="findAddressByCusId" resultMap="baseMap">
+ 		SELECT 
+ 			<include refid="baseColumn"/>
+ 		FROM 
+ 			jsn_address
+ 		WHERE 
+ 			address_customer = #{addressCustomerId} ORDER BY address_default DESC
+ 	</select>
+ 	
+ 	<!-- /**通过顾客的编号查询该顾客的默认地址*/ -->
+ 	<select id="findDefAddressByCusId" resultMap="baseMap">
+ 		SELECT 
+ 			<include refid="baseColumn"/>
+ 		FROM 
+ 			jsn_address 
+ 		WHERE 
+ 			address_customer = #{addressCustomerId} and address_default='默认地址'
+ 	</select>
+ 	
+ 	<!-- /**通过地址编号*/ -->
+ 	<select id="findAddressById" resultMap="baseMap">
+ 		SELECT 
+ 			<include refid="baseColumn"/>
+ 		FROM 
+ 			jsn_address 
+ 		WHERE 
+ 			address_id = #{addressId}
+ 	</select>
+ 	
+ 	<!-- /**设置地址的普通属性*/ -->
+ 	<update id="updateAddress" parameterType="com.jiang.beans.Address">
+ 		UPDATE jsn_address SET address_default='普通地址' WHERE address_id = #{addressId}
+ 	</update>
+ 	
+ 	<!-- /**设置地址的普通属性*/ -->
+ 	<update id="updateDefAddress" parameterType="com.jiang.beans.Address">
+ 		UPDATE jsn_address SET address_default='默认地址' WHERE address_id = #{addressId}
+ 	</update>
+ 	
+ 	<!-- /**按编号删除地址*/ -->
+ 	<delete id="delAddress">
+ 		DELETE FROM jsn_address WHERE address_id=#{addressId}
+ 	</delete>
+ 	
+ 	<!-- /**插入新地址*/ -->
+ 	<insert id="insertAddress" parameterType="com.jiang.beans.Address">		
+ 		INSERT INTO 
+ 			jsn_address 
+ 			(<include refid="baseColumn"/>) 
+ 		VALUES 
+ 			(#{addressId},#{addressCustomerId},#{addressDefault},
+ 				#{addressProvince},#{addressCity},#{addressDistrict},#{addressDescInfo})
+ 	</insert>
+ 	
+ 	<!-- /**修改地址信息*/ -->
+ 	<update id="updateAddressInfo" parameterType="com.jiang.beans.Address">
+ 		UPDATE jsn_address SET
+ 			address_default=#{addressDefault}, 
+ 			address_province=#{addressProvince},
+ 			address_city=#{addressCity},
+ 			address_district=#{addressDistrict},
+ 			address_descinfo=#{addressDescInfo}
+ 		WHERE address_id = #{addressId}
+ 	</update>
+ 	
+ </mapper>

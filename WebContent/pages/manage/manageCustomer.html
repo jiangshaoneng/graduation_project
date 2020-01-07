@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>用户管理</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+	<link type="text/css" href="css/pagination.css" rel="stylesheet" />
+    <!-- Add custom CSS here -->
+    <link href="css/sb-admin.css" rel="stylesheet">
+    <link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
+    <!-- Page Specific CSS -->
+    <link rel="stylesheet" href="css/morris-0.4.3.min.css">
+  </head>
+
+  <body>
+
+    <div id="wrapper">
+
+      <!-- Sidebar -->
+      <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <span id="admin"></span>
+        </div>
+
+        <div class="collapse navbar-collapse navbar-ex1-collapse">
+          <ul class="nav navbar-nav side-nav">
+            <li><a href="manageNotice.html"><span class="glyphicon glyphicon-bullhorn"></span> 公告管理</a></li>
+            <li class="active"><a href="manageCustomer.html"><span class="glyphicon glyphicon-user"></span> 用户管理</a></li>
+            <li><a href="manageGoods.html"><span class="glyphicon glyphicon glyphicon-align-justify"></span></i> 商品管理</a></li>
+            <li><a href="manageOrderopt.html"><span class="glyphicon glyphicon-list-alt"></span> 订单管理</a></li>
+          </ul>
+        </div>
+      </nav>
+
+      <div id="page-wrapper">
+		<!-- 查询条件 -->
+		<div class="col-lg-12">
+			<!-- <form class="form-inline" role="form"> -->
+			 <div class="form-group col-lg-3">
+			    <input type="text" class="form-control" id="cusId" placeholder="编号">
+			  </div>
+			  <div class="form-group col-lg-3">
+			    <input type="text" class="form-control" id="cusRealname" placeholder="姓名">
+			  </div>
+			  <div class="form-group col-lg-3">
+			    <select class="form-control" id="cusType">
+			    	<option value="">用户类型</option>
+			    	<option value="认证用户">认证用户</option>
+			    	<option value="普通用户">普通用户</option>
+			    </select>
+			  </div>
+			   <div class="form-group col-lg-3">
+			    <select class="form-control" id="cusStatus">
+			    	<option value="">状态</option>
+			    	<option value="激活">激活</option>
+			    	<option value="冻结">冻结</option>
+			    </select>
+			  </div>
+			  <div class="form-group col-lg-3">
+			    <input type="date" class="form-control" id="startTime">
+			  </div>
+			  <div class="form-group col-lg-3">
+			    <input type="date" class="form-control" id="endTime">
+			  </div>
+			  &nbsp;
+			  <div class="form-group col-lg-3">
+				  <button type="button" class="btn btn-block btn-primary" onclick="showCustomer(1)">查询</button>
+			  </div>
+			<!-- </form> -->
+		</div>
+		<hr>
+		<!-- 查询结果 -->
+		<div class="col-lg-12">
+			<div class="table-responsive">
+              <table class="table table-bordered table-hover tablesorter">
+                <thead>
+                  <tr>
+                    <th width="10%">编号</th>
+                    <th width="10%">昵称</th>
+                    <th width="10%">姓名</th>
+                    <th width="5%">性别</th>
+                    <th width="10%">类型</th>
+                    <th width="10%">余额</th>
+                    <th width="10%">积分</th>
+                    <th width="10%">电话</th>
+                    <th width="10%">邮箱</th>
+                    <th width="10%">注册时间</th>
+                    <th width="5%">状态</th>
+                  </tr>
+                </thead>
+                <tbody id="dataInfo"></tbody>
+              </table>
+             </div>
+			<div class="M-box3" style="margin: 10px auto; width: 80%;"></div>
+		</div>
+	  </div>
+      
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/jquery-1.9.1.min.js"></script>
+    <script src="js/bootstrap.js"></script>
+	<script type="text/javascript" src="js/jquery.pagination.js"></script>
+	
+	<script type="text/javascript">
+	$(function(){
+		getSessionInfo();
+		showCustomer(1);
+	})
+	
+		//获取admin信息
+		function getSessionInfo(){
+			$.ajax({
+				type : "post", //提交方式 
+				url : "/graduation_project/manage_getSession",//路径
+				dateType : "JSON",//返回的数据类型
+				data : {},
+				success : function(data) {
+					if(typeof(data.adminName)!="undefined"){
+						var temp = "<span class='navbar-brand'>管理员："+data.adminName+"</span>";
+						temp += "<a class='navbar-brand' href='/graduation_project/manage_logout'>安全退出</a>";
+						$("#admin").html(temp);
+					}
+					
+				}
+			});
+		}	
+	
+	//ajax分页查询
+	function showCustomer(currentPageNo){
+		//获取查询条件
+		var cusId = $("#cusId").val();
+		var cusRealname = $("#cusRealname").val();
+		var cusType = $("#cusType").val();
+		var cusStatus = $("#cusStatus").val();
+		var startTime = $("#startTime").val();
+		var endTime = $("#endTime").val();
+		//console.log(cusId+"--"+cusRealname+"--"+cusType+"--"+cusStatus+"--"+startTime+"--"+endTime);
+		$.ajax({
+			type : "post", //提交方式 
+			url : "/graduation_project/manage_findCustomer",//路径
+			dateType : "JSON",//返回的数据类型
+			data : {
+				"cusId":cusId,
+				"cusRealname":cusRealname,
+				"cusType":cusType,
+				"cusStatus":cusStatus,
+				"startTime":startTime,
+				"endTime":endTime,
+				"pageNo" : currentPageNo
+			},
+			success : function(data) {
+				//console.log(data);
+				var customer = data.list;
+				var temp = "";
+				for(var index in customer){
+					console.log(typeof(customer[index].cusEmail)!='undefined');
+					temp += "<tr>";
+					temp += "<td>"+customer[index].cusId+"</td>";
+					temp += "<td>"+customer[index].cusName+"</td>";
+					temp += "<td>"+customer[index].cusRealname+"</td>";
+					temp += "<td>"+customer[index].cusGender+"</td>";
+					temp += "<td>"+customer[index].cusType+"</td>";
+					temp += "<td>"+customer[index].cusBalance+"</td>";
+					temp += "<td>"+customer[index].cusScore+"</td>";
+					temp += "<td>"+customer[index].cusPhone+"</td>";
+					temp += "<td>";
+					if(typeof(customer[index].cusEmail)!='undefined')
+						temp += customer[index].cusEmail;
+					temp += "</td>";
+					temp += "<td>"+customer[index].cusRegtime+"</td>";
+					if(customer[index].cusStatus=="激活")
+						temp += '<td><a href="javaScript:void(0);" onclick=freezeCustomer('+"'"+customer[index].cusId+"',"+"'"+customer[index].cusStatus+"'"+')><span class="glyphicon glyphicon-ok-sign" style="color: rgb(0, 135, 199); font-size: 16px;"></span></a></td>';
+					if(customer[index].cusStatus=="冻结")
+						temp += '<td><a href="javaScript:void(0);" onclick=freezeCustomer('+"'"+customer[index].cusId+"',"+"'"+customer[index].cusStatus+"'"+')><span class="glyphicon glyphicon-remove-sign" style="color: rgb(255, 0, 0); font-size: 16px;"></span></a></td>';
+					temp += "</tr>";
+				}
+				$("#dataInfo tr").remove();
+				$("#dataInfo").html(temp); 
+				choosePage(data);
+			}
+		});
+	}
+	
+	//choosePage
+	function choosePage(data){
+		$('.M-box3').pagination({
+			pageCount:data.totalPage,
+			current:data.currentPageNo,
+			isHide : false,
+			jump : true,
+			coping : true,
+			count : 3,
+			showData : 5,
+			homePage : '首页',
+			endPage : '末页',
+			prevContent : '上页',
+			nextContent : '下页',
+			callback : function(api) {
+				//将选择的页码传给AJAX
+				var currentPageNo = api.getCurrent();
+				flagPage = currentPageNo;
+				showCustomer(currentPageNo);
+			}
+		})
+	}
+	
+	//冻结用户
+	function freezeCustomer(cusId,rootStatus){
+		var newStatus;
+		if("激活"==rootStatus){
+			var flag = confirm("确认冻结此账户?");
+			if(!flag)
+				return false;
+			newStatus = "冻结";
+		}else{
+			var flag = confirm("确认激活此账户?");
+			if(!flag)
+				return false;
+			newStatus = "激活";
+		}
+		
+		$.ajax({
+			type : "post", //提交方式 
+			url : "/graduation_project/manage_freezeCustomer",//路径
+			dateType : "JSON",//返回的数据类型
+			data : {
+				"cusId":cusId,
+				"status":newStatus
+			},
+			success : function(data) {
+				if("success"==data){
+					showCustomer(1);
+				}else{
+					alert("系统异常！")
+				}
+			}
+		});
+	}
+	
+	</script>
+
+  </body>
+</html>

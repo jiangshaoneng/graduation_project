@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+ <mapper namespace="com.jiang.dao.OrderoptMapper">
+ 	
+ 	<!-- 原始数据 -->
+ 	<resultMap type="com.jiang.beans.Orderopt" id="orderoptPrimary">
+ 		<id column="orderopt_id" property="orderoptId"/>
+ 		<result column="orderopt_paycustomer" property="orderoptPaycustomerId"/>
+ 		<result column="orderopt_sellcustomer" property="orderoptSellcustomerId"/>
+ 		<result column="orderopt_goods" property="orderoptGoodsId"/>
+ 		<result column="orderopt_order" property="orderoptOrderId"/>
+ 		<result column="orderopt_num" property="orderoptNum"/>
+ 		<result column="orderopt_price" property="orderoptPrice"/>
+ 		<result column="orderopt_status" property="orderoptStatus"/>
+ 		<result column="orderopt_comment" property="orderoptComment"/>
+ 		<result column="orderopt_edittime" property="orderoptEdittime"/>
+ 	</resultMap>
+ 	
+ 	<!-- 级联查询结果集 -->
+ 	<resultMap type="com.jiang.beans.Orderopt" id="orderoptInfo">
+ 		<id column="orderopt_id" property="orderoptId"/>
+ 		<result column="orderopt_paycustomer" property="orderoptPaycustomerId"/>
+ 		<result column="orderopt_sellcustomer" property="orderoptSellcustomerId"/>
+ 		<result column="orderopt_goods" property="orderoptGoodsId"/>
+ 		<result column="orderopt_order" property="orderoptOrderId"/>
+ 		<result column="orderopt_num" property="orderoptNum"/>
+ 		<result column="orderopt_price" property="orderoptPrice"/>
+ 		<result column="orderopt_status" property="orderoptStatus"/>
+ 		<result column="orderopt_comment" property="orderoptComment"/>
+ 		<result column="orderopt_edittime" property="orderoptEdittime"/>
+ 		
+ 		<!-- 买家 -->
+ 		<association property="orderoptPaycustomer" column="orderopt_paycustomer"
+ 				select="com.jiang.dao.CustomerMapper.findCustomerById"/>
+ 		
+ 		<!-- 查询出商品 -->
+ 		<association property="orderoptGoods" column="orderopt_goods" 
+ 				select="com.jiang.dao.GoodsMapper.findGoodsById"/> 
+ 	</resultMap>
+ 	
+ 	<sql id="baseColumn">
+ 		orderopt_id,orderopt_paycustomer,orderopt_sellcustomer,orderopt_goods,
+ 		orderopt_order,orderopt_num,orderopt_price,
+ 		orderopt_status,orderopt_comment,DATE_FORMAT(orderopt_edittime,'%Y-%m-%d %H:%i:%s') as orderopt_edittime
+ 	</sql>
+ 	
+ 	<insert id="batchInsert" parameterType="com.jiang.beans.Orderopt" >
+	 	insert into jsn_orderopt(
+			orderopt_id,orderopt_paycustomer,orderopt_sellcustomer,orderopt_goods,
+ 			orderopt_order,orderopt_num,orderopt_price,
+ 			orderopt_status,orderopt_comment,orderopt_edittime
+		) values
+	 	<foreach collection="list" item="orderopt" separator=",">
+	 		(#{orderopt.orderoptId},#{orderopt.orderoptPaycustomerId},#{orderopt.orderoptSellcustomerId},
+	 			#{orderopt.orderoptGoodsId},#{orderopt.orderoptOrderId},#{orderopt.orderoptNum},
+	 			#{orderopt.orderoptPrice},#{orderopt.orderoptStatus},#{orderopt.orderoptComment},SYSDATE())	
+	 	</foreach>
+ 	</insert>
+ 	
+ 	<!-- 查询出订单下的所有订单项 -->
+ 	<select id="findListByOrderId" resultType="java.util.List" resultMap="orderoptInfo">
+ 		select <include refid="baseColumn"/> from jsn_orderopt where orderopt_order = #{orderId}
+ 	</select>
+ 	 
+ 	 <!-- 查询某条出订单项 -->
+ 	 <select id="findPrimaryById" resultMap="orderoptPrimary">
+ 	 	select <include refid="baseColumn"/> from jsn_orderopt where orderopt_id = #{orderoptId}
+ 	 </select>
+ 	 
+ 	 <!-- 更新一条订单项 -->
+ 	 <update id="update">
+ 	 	update jsn_orderopt
+ 	 	<set>
+			<if test="orderoptNum!=null">
+			 	orderopt_num=#{orderoptNum},
+			</if>
+			<if test="orderoptPrice!=null">
+			 	orderopt_price=#{orderoptPrice},
+			</if>
+			<if test="orderoptStatus!=null">
+			 	orderopt_status=#{orderoptStatus},
+			</if>
+			<if test="orderoptComment!=null">
+			 	orderopt_comment=#{orderoptComment},
+			</if>
+				orderopt_edittime = SYSDATE()
+	 	</set>
+	 	where orderopt_id=#{orderoptId}
+ 	 </update>
+ 	 
+ 	  <!-- 批量更新订单项 -->
+ 	 <update id="batchUpdata">
+ 	 	update jsn_orderopt SET 
+ 	 	orderopt_num = (
+			CASE 
+			<foreach collection="orderoptList" item="orderopt">
+				WHEN orderopt_id=#{orderopt.orderoptId} THEN  #{orderopt.orderoptNum}
+			</foreach>
+			ELSE orderopt_num
+			END
+		),
+		orderopt_price = (
+			CASE 
+			<foreach collection="orderoptList" item="orderopt">
+				WHEN orderopt_id=#{orderopt.orderoptId} THEN  #{orderopt.orderoptPrice}
+			</foreach>
+			ELSE orderopt_price
+			END
+		),
+		orderopt_status = (
+			CASE 
+			<foreach collection="orderoptList" item="orderopt">
+				WHEN orderopt_id=#{orderopt.orderoptId} THEN  #{orderopt.orderoptStatus}
+			</foreach>
+			ELSE orderopt_status
+			END
+		),
+		orderopt_comment = (
+			CASE 
+			<foreach collection="orderoptList" item="orderopt">
+				WHEN orderopt_id=#{orderopt.orderoptId} THEN  #{orderopt.orderoptComment}
+			</foreach>
+			ELSE orderopt_comment
+			END
+		)
+ 	 </update>
+ 	 
+ 	 <!-- 查询买家 -->
+ 	 <select id="findList" resultMap="orderoptInfo" parameterType="Map">
+ 	 	select <include refid="baseColumn"/> from jsn_orderopt where 1 = 1
+ 	 	<if test="payCusId!=null">and orderopt_paycustomer = #{payCusId}</if>
+ 	 	<if test="status!=null">and orderopt_status = #{status}</if>
+ 	 	<if test="startTime!=null">and orderopt_edittime &gt;= #{startTime}</if>
+ 	 	<if test="endTime!=null">and orderopt_edittime &lt;= #{endTime}</if>
+ 	 	order by orderopt_edittime desc
+ 	 	limit #{currentPageStart},#{currentPageNum}
+ 	 </select>
+ 	 
+ 	 <select id="findCount" resultType="int" parameterType="Map">
+ 	 	select count(*) from jsn_orderopt where 1 = 1
+ 	 	<if test="payCusId!=null">and orderopt_paycustomer = #{payCusId}</if>
+ 	 	<if test="status!=null">and orderopt_status = #{status}</if>
+ 	 	<if test="startTime!=null">and orderopt_edittime &gt;= #{startTime}</if>
+ 	 	<if test="endTime!=null">and orderopt_edittime &lt;= #{endTime}</if>
+ 	 </select>
+ 	 
+ 	 <!-- 查询卖家的所有待发货的订单信息 -->
+ 	 <select id="findListBySellCusId" resultMap="orderoptInfo" parameterType="Map">
+ 	 	select <include refid="baseColumn"/> from jsn_orderopt where orderopt_status!='待付款'
+ 	 		<if test="sellCusId!=null">
+ 	 		and orderopt_sellcustomer = #{sellCusId} 
+ 	 		</if>
+ 	 		<if test="status!=null">
+ 	 		and orderopt_status = #{status}
+ 	 		</if>
+ 	 		order by orderopt_edittime desc
+ 	 	limit #{currentPageStart},#{currentPageNum}
+ 	 </select>
+ 	 
+ 	 <!-- 查询卖家的所有待发货的订单信息的数量 -->
+ 	 <select id="findListBySellCusIdCount" resultType="int" parameterType="Map">
+ 	 	select count(*) from jsn_orderopt where orderopt_status!='待付款'
+ 	 		<if test="sellCusId!=null">
+ 	 		and orderopt_sellcustomer = #{sellCusId} 
+ 	 		</if>
+ 	 		<if test="status!=null">
+ 	 		and orderopt_status = #{status}
+ 	 		</if>
+ 	 </select>
+ 	 
+ 	 <select id="manageFindOrderoptCount" resultType="int">
+ 	 	select count(*) from jsn_orderopt where 1 = 1
+ 	 		<if test="orderopId!=null">and orderopt_id like #{orderoptId}</if>
+ 	 		<if test="orderoptStatus!=null">and orderopt_status = #{orderoptStatus}</if>
+ 	 		<if test="startTime!=null">and orderopt_edittime &gt;= #{startTime}</if>
+			<if test="endTime!=null">and orderopt_edittime &lt;= #{endTime}</if>
+ 	 </select>
+ 	 
+ 	 <select id="manageFindOrderopt" resultMap="orderoptInfo" parameterType="Map">
+ 	 	select <include refid="baseColumn"/> from jsn_orderopt where 1 = 1
+ 	 		<if test="orderoptId!=null">and orderopt_id like #{orderoptId}</if>
+ 	 		<if test="orderoptStatus!=null">and orderopt_status = #{orderoptStatus}</if>
+ 	 		<if test="startTime!=null">and orderopt_edittime &gt;= #{startTime}</if>
+			<if test="endTime!=null">and orderopt_edittime &lt;= #{endTime}</if>
+ 	 		order by orderopt_edittime desc
+ 	 	limit #{currentPageStart},#{currentPageNum}
+ 	 </select>
+ 	 
+ </mapper>

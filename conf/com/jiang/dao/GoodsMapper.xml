@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+ <mapper namespace="com.jiang.dao.GoodsMapper">
+ 
+ <sql id="baseColumn">
+ 	goods_id,goods_name,goods_price,goods_info,DATE_FORMAT(goods_addtime,'%Y-%m-%d') as goods_addtime_str,
+ 	goods_addtime,goods_type,goods_status,goods_total,goods_paytype,goods_customer,goods_address
+ </sql>
+ 
+ <!-- /**添加一件商品*/ -->
+ <insert id="addGoods" parameterType="com.jiang.beans.Goods">
+ 	INSERT INTO 
+ 			jsn_goods 
+ 			(goods_id,goods_name,goods_price,goods_info,goods_addtime,goods_type,
+ 			goods_status,goods_total,goods_paytype,goods_customer,goods_address) 
+ 		VALUES 
+ 			(#{goodsId},#{goodsName},#{goodsPrice},#{goodsInfo},SYSDATE(),#{goodsType},
+ 			#{goodsStatus},#{goodsTotal},#{goodsPaytype},#{goodsCustomerId},#{goodsAddress})
+ </insert>
+ 
+ <!-- /**修改商品的信息*/ -->
+ <update id="updateGoods" parameterType="com.jiang.beans.Goods">
+ 	UPDATE jsn_goods SET 
+ 	<trim suffixOverrides=",">
+ 		<if test="goodsName!=null">goods_name=#{goodsName},</if>
+		<if test="goodsPrice!=null">goods_price=#{goodsPrice},</if>
+		<if test="goodsInfo!=null">goods_info=#{goodsInfo},</if>
+		<if test="goodsAddtime!=null">goods_addtime=#{goodsAddtime},</if>
+		<if test="goodsType!=null">goods_type=#{goodsType},</if>
+		<if test="goodsStatus!=null">goods_status=#{goodsStatus},</if>
+		<if test="goodsTotal!=null">goods_total=#{goodsTotal},</if>
+		<if test="goodsPaytype!=null">goods_paytype=#{goodsPaytype},</if>
+		<if test="goodsAddress!=null">goods_address=#{goodsAddress}</if>
+	</trim>
+ 	WHERE goods_id = #{goodsId}
+ </update>
+ 
+<update id="manageUpdateStatus" parameterType="java.lang.String">
+	UPDATE jsn_goods SET goods_status= #{0} WHERE goods_id = #{1}
+</update>
+
+ <!-- /**根据用户编号与商品的状态,查找商品*/ -->
+ <select id="findGoodsBycusIdAndStatus" resultType="com.jiang.beans.Goods" parameterType="Map">
+ 	SELECT 
+ 		goods_id,goods_name,goods_price,goods_info,goods_addtime,
+ 		goods_type,goods_status,goods_total,goods_paytype,goods_address
+ 	FROM 
+ 		jsn_goods
+ 	WHERE 
+ 		goods_customer=#{cusId} and goods_status != '已移除'
+	 	<if test="goodsStatus!=null and goodsStatus!=''" >and goods_status = #{goodsStatus}</if>
+	 	<if test="orderBy!=null and orderBy !=''" >ORDER BY goods_addtime ${orderBy}</if>
+ </select>
+ 
+ <!-- /**查询一件商品的信息*/ -->
+ <resultMap type="com.jiang.beans.Goods" id="myGoods">
+ 	<id column="goods_id" property="goodsId"/>
+ 	<result column="goods_name" property="goodsName"/>
+ 	<result column="goods_price" property="goodsPrice"/>
+ 	<result column="goods_info" property="goodsInfo"/>
+ 	<result column="goods_addtime" property="goodsAddtime"/>
+ 	<result column="goods_addtime_str" property="goodsAddtimeStr"/>
+ 	<result column="goods_type" property="goodsType"/>
+ 	<result column="goods_status" property="goodsStatus"/>
+ 	<result column="goods_total" property="goodsTotal"/>
+ 	<result column="goods_paytype" property="goodsPaytype"/>
+ 	<result column="goods_address" property="goodsAddress"/>
+ 	<!-- 商品的发布者 -->
+ 	<association property="goodsCustomer"
+ 		select="com.jiang.dao.CustomerMapper.findCustomerById" 
+ 		column="goods_customer">
+ 	</association>
+ 	<!-- 商品的图片 -->
+ 	<collection property="images"
+ 		select="com.jiang.dao.ImagesMapper.findAllImgByGoodsId" 
+ 		column="goods_id" fetchType="lazy">
+ 	</collection>
+ 	
+ </resultMap>
+ 
+ <!-- /**查询一件商品的信息*/ -->
+ <select id="findGoodsById" resultMap="myGoods">
+ 	SELECT goods_id,goods_name,goods_price,goods_info,goods_addtime,
+ 			goods_type,goods_status,goods_total,goods_paytype,goods_customer,goods_address
+ 	FROM jsn_goods WHERE goods_id = #{goodsId}
+ </select>
+ 
+ <!-- /**查询某一类商品的数量1,商品种类*/ -->
+ <select id="findGoodsCountByClassify" resultType="int" parameterType="Map">
+ 	SELECT COUNT(*) FROM jsn_goods where goods_status = '出售中'
+ 		<trim>
+ 			<if test="goodsType!=null">
+	 			and goods_type = #{goodsType}
+	 		</if>
+	 		<if test="payType!=null">
+	 			and goods_paytype = #{payType}
+	 		</if>
+	 		<if test="lowPrice!=null or topPrice!=null">
+	 			<choose>
+	 				<when test="lowPrice!=null and topPrice!=null">
+		 			and goods_price between #{lowPrice} and #{topPrice}
+		 			</when>
+		 			<when test="lowPrice!=null">
+		 			and goods_price  &gt; #{lowPrice}
+		 			</when>
+		 			<when test="topPrice!=null">
+		 			and goods_price  &lt; #{topPrice}
+		 			</when>
+	 			</choose>
+	 		</if>
+	 		<if test="goodsName!=null">
+	 			and (goods_name like #{goodsName} or goods_info like #{goodsName})
+	 		</if>
+	 		<if test="goodsAddress!=null">
+	 			and goods_address like #{goodsAddress}
+	 		</if>
+	 		<if test="priceOrderBy!=null">
+	 			ORDER BY goods_price ${priceOrderBy}
+	 		</if>
+	 		<if test="priceOrderBy==null">
+	 			ORDER BY goods_addtime desc
+	 		</if>
+ 		</trim>
+ </select>
+ 
+ <!-- /**查询某一类商品的数量1,商品种类 2,分页的起始条 3,每页的数量*/ -->
+ <select id="findGoodsByClassify" resultMap="myGoods">
+ 	SELECT goods_id,goods_name,goods_price,goods_info,goods_addtime,
+ 			goods_type,goods_status,goods_total,goods_paytype,goods_customer,goods_address
+ 	FROM jsn_goods WHERE goods_status = '出售中' and goods_type = #{0} LIMIT #{1},#{2}
+ </select>
+ 
+ <!-- /**商品的高级查询 条件包括:商品的类型 交易方式 价格排序方式 价格区间 高,低 商品的地址 商品描述*/ -->
+  <select id="findGoodsByMycondition" resultMap="myGoods" parameterType="Map">
+ 	SELECT goods_id,goods_name,goods_price,goods_info,goods_addtime,
+ 			goods_type,goods_status,goods_total,goods_paytype,goods_customer,goods_address
+ 	FROM jsn_goods where goods_status = '出售中'
+ 		<trim>
+	 		<if test="goodsType!=null">
+	 			and goods_type = #{goodsType}
+	 		</if>
+	 		<if test="payType!=null">
+	 			and goods_paytype = #{payType}
+	 		</if>
+	 		<if test="lowPrice!=null or topPrice!=null">
+	 			<choose>
+	 				<when test="lowPrice!=null and topPrice!=null">
+		 			and goods_price between #{lowPrice} and #{topPrice}
+		 			</when>
+		 			<when test="lowPrice!=null">
+		 			and goods_price  &gt; #{lowPrice}
+		 			</when>
+		 			<when test="topPrice!=null">
+		 			and goods_price  &lt; #{topPrice}
+		 			</when>
+	 			</choose>
+	 		</if>
+	 		<if test="goodsName!=null">
+	 			and (goods_name like #{goodsName} or goods_info like #{goodsName})
+	 		</if>
+	 		<if test="goodsAddress!=null">
+	 			and goods_address like #{goodsAddress}
+	 		</if>
+	 		<if test="priceOrderBy!=null">
+	 			ORDER BY goods_price ${priceOrderBy}
+	 		</if>
+	 		<if test="priceOrderBy==null">
+	 			ORDER BY goods_addtime desc
+	 		</if>
+ 		</trim>
+	 		LIMIT #{currentPageStart},#{currentPageNum}
+ </select>
+ 
+ <!-- 批量更新商品的库存 -->
+ <update id="updateBatch">
+ 	UPDATE jsn_goods SET 
+		goods_status = (
+			CASE 
+			<foreach collection="goodsList" item="goods">
+				WHEN goods_id=#{goods.goodsId} THEN  #{goods.goodsStatus}
+			</foreach>
+			ELSE goods_status
+			END
+		),
+		goods_total = (
+			CASE 
+			<foreach collection="goodsList" item="goods">
+				WHEN goods_id=#{goods.goodsId} THEN  #{goods.goodsTotal}
+			</foreach>
+			ELSE goods_total
+			END
+		)
+ </update>
+ 
+ <!-- 管理员查询商品数量 -->
+ <select id="managefindGoodsCount" resultType="int" parameterType="Map">
+ 	SELECT count(*) FROM jsn_goods where 1=1
+ 	<if test="startTime!=null">and goods_addtime &gt;= #{startTime}</if>
+	<if test="endTime!=null">and goods_addtime &lt;= #{endTime}</if>
+	<if test="goodsType!=null">and goods_type = #{goodsType}</if>	
+	<if test="goodsStatus!=null">and goods_status = #{goodsStatus}</if>
+	<if test="goodsId!=null">and goods_id like #{goodsId}</if>
+	<if test="goodsName!=null">and goods_name like #{goodsName}</if>
+	<if test="goodsCustomerId!=null">and goods_customer = #{goodsCustomerId}</if>
+ </select>
+ 
+ <!-- 管理员查询商品 -->
+ <select id="managefindGoods" resultMap="myGoods" parameterType="Map">
+ 	SELECT 
+ 		goods_id,goods_name,goods_price,goods_info,DATE_FORMAT(goods_addtime,'%Y-%m-%d') as goods_addtime_str,
+ 		goods_addtime,goods_type,goods_status,goods_total,goods_paytype,goods_customer,goods_address
+ 	FROM 
+ 		jsn_goods where 1=1
+ 	<if test="startTime!=null">and goods_addtime &gt;= #{startTime}</if>
+	<if test="endTime!=null">and goods_addtime &lt;= #{endTime}</if>
+	<if test="goodsType!=null">and goods_type = #{goodsType}</if>	
+	<if test="goodsStatus!=null">and goods_status = #{goodsStatus}</if>
+	<if test="goodsId!=null">and goods_id like #{goodsId}</if>
+	<if test="goodsName!=null">and goods_name like #{goodsName}</if>
+	<if test="goodsCustomerId!=null">and goods_customer = #{goodsCustomerId}</if>
+	ORDER BY goods_addtime DESC
+	LIMIT #{currentPageStart},#{currentPageNum}
+ </select>
+ 
+ </mapper>

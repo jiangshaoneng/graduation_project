@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>商品管理</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+	<link type="text/css" href="css/pagination.css" rel="stylesheet" />
+    <!-- Add custom CSS here -->
+    <link href="css/sb-admin.css" rel="stylesheet">
+   <!--  <link rel="stylesheet" href="font-awesome/css/font-awesome.min.css"> -->
+    <style type="text/css">
+    	input {
+			margin:0px;
+		}
+    </style>
+  </head>
+  <body>
+
+    <div id="wrapper">
+
+      <!-- Sidebar -->
+      <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <span id="admin"></span>
+        </div>
+
+        <div class="collapse navbar-collapse navbar-ex1-collapse">
+          <ul class="nav navbar-nav side-nav">
+            <li><a href="manageNotice.html"><span class="glyphicon glyphicon-bullhorn"></span> 公告管理</a></li>
+            <li><a href="manageCustomer.html"><span class="glyphicon glyphicon-user"></span> 用户管理</a></li>
+            <li  class="active"><a href="manageGoods.html"><span class="glyphicon glyphicon glyphicon-align-justify"></span></i> 商品管理</a></li>
+            <li><a href="manageOrderopt.html"><span class="glyphicon glyphicon-list-alt"></span> 订单管理</a></li>
+           </ul>
+        </div>
+      </nav>
+
+      <div id="page-wrapper">
+      <!-- 查询条件 -->
+		<div class="col-lg-12">
+			<!-- <form class="form-inline" role="form"> -->
+			<div class="form-group col-lg-3">
+			    <input type="date" class="form-control" id="startTime">
+			  </div>
+			  <div class="form-group col-lg-3">
+			    <input type="date" class="form-control" id="endTime">
+			  </div>
+			  <div class="form-group col-lg-3">
+			    <select class="form-control" id="goodsType">
+			    	<option value="">商品分类</option>
+			    	<option value="书籍">书籍</option>
+			    	<option value="衣物">衣物</option>
+			    	<option value="日用品">日用品</option>
+			    	<option value="电子设备">电子设备</option>
+			    </select>
+			  </div>
+			  <div class="form-group col-lg-3">
+			    <select class="form-control" id="goodsStatus">
+			    	<option value="">状态</option>
+			    	<option value="出售中">出售中</option>
+			    	<option value="已售出">已售出</option>
+			    	<option value="已移除">已移除</option>
+			    	<option value="已下架">已下架</option>
+			    </select>
+			  </div>
+			  <div class="form-group col-lg-3">
+			    <input type="text" class="form-control" id="goodsId" placeholder="商品编号">
+			  </div>
+			  <div class="form-group col-lg-3">
+			    <input type="text" class="form-control" id="goodsName" placeholder="商品名称">
+			  </div>
+			  <div class="form-group col-lg-3">
+			    <input type="text" class="form-control" id="goodsCustomerId" placeholder="卖家编号">
+			  </div>
+			  
+			  <div class="form-group col-lg-3">
+				  <button type="button" class="btn btn-primary btn-block" onclick="showGoods(1)">查询</button>
+			  </div>
+			<!-- </form> -->
+		</div>
+		<hr>
+		<!-- 查询结果 -->
+		<div class="col-lg-12">
+			<div class="table-responsive">
+              <table class="table table-bordered table-hover tablesorter">
+                <thead>
+                  <tr>
+                    <th width="15%">编号</th>
+                    <th width="10%">类型</th>
+                    <th width="20%">名称</th>
+                    <th width="10%">卖家编号</th>
+                    <th width="8%">卖家</th>
+                    <th width="10%">单价(元)</th>
+                    <th width="5%">数量</th>
+                    <th width="10%">上架时间</th>
+                    <th width="7%">状态</th>
+                    <th width="5%">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="dataInfo"></tbody>
+              </table>
+             </div>
+			<div class="M-box3" style="margin: 10px auto; width: 80%;"></div>
+		</div>
+      </div>
+
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/jquery-1.10.2.js"></script>
+    <script src="js/bootstrap.js"></script>
+	<script type="text/javascript" src="js/jquery.pagination.js"></script>
+	
+	<script type="text/javascript">
+	$(function(){
+		getSessionInfo();
+		showGoods(1);
+	})
+	
+		//获取admin信息
+		function getSessionInfo(){
+			$.ajax({
+				type : "post", //提交方式 
+				url : "/graduation_project/manage_getSession",//路径
+				dateType : "JSON",//返回的数据类型
+				data : {},
+				success : function(data) {
+					if(typeof(data.adminName)!="undefined"){
+						var temp = "<span class='navbar-brand'>管理员："+data.adminName+"</span>";
+						temp += "<a class='navbar-brand' href='/graduation_project/manage_logout'>安全退出</a>";
+						$("#admin").html(temp);
+					}
+					
+				}
+			});
+		}	
+	
+	//ajax分页查询
+	function showGoods(currentPageNo){
+		//获取查询条件
+		var goodsId = $("#goodsId").val();
+		var goodsName = $("#goodsName").val();
+		var goodsCustomerId = $("#goodsCustomerId").val();
+		var goodsType = $("#goodsType").val();
+		var goodsStatus = $("#goodsStatus").val();
+		var startTime = $("#startTime").val();
+		var endTime = $("#endTime").val();
+		
+		$.ajax({
+			type : "post", //提交方式 
+			url : "/graduation_project/manage_findGoods",//路径
+			dateType : "JSON",//返回的数据类型
+			data : {
+				"goodsId":goodsId,
+				"goodsName":goodsName,
+				"goodsCustomerId":goodsCustomerId,
+				"goodsType":goodsType,
+				"goodsStatus":goodsStatus,
+				"startTime":startTime,
+				"endTime":endTime,
+				"pageNo" : currentPageNo
+			},
+			success : function(data) {
+				console.log(data);
+				var goods = data.list;
+				var temp = "";
+				for(var index in goods){
+					temp += "<tr>";
+					temp += "<td>"+goods[index].goodsId+"</td>";
+					temp += "<td>"+goods[index].goodsType+"</td>";
+					temp += "<td>"+goods[index].goodsName+"</td>";
+					temp += "<td>"+goods[index].goodsCustomer.cusId+"</td>";
+					temp += "<td>"+goods[index].goodsCustomer.cusRealname+"</td>";
+					temp += "<td>￥："+goods[index].goodsPrice+"</td>";
+					temp += "<td>"+goods[index].goodsTotal+"</td>";
+					temp += "<td>"+goods[index].goodsAddtimeStr+"</td>";
+					temp += "<td>"+goods[index].goodsStatus+"</td>";
+					//对出售中的商品进行下架
+					if(goods[index].goodsStatus=="出售中"){
+						temp += '<td><a href="javaScript:void(0);" onclick=freezeGoods('+"'"+goods[index].goodsId+"',"+"'"+goods[index].goodsStatus+"'"+')><span class="glyphicon glyphicon-ok-sign" style="color: rgb(0, 135, 199); font-size: 16px;"></span></a></td>';
+					}else if(goods[index].goodsStatus=="已下架"){
+						temp += '<td><a href="javaScript:void(0);" onclick=freezeGoods('+"'"+goods[index].goodsId+"',"+"'"+goods[index].goodsStatus+"'"+')><span class="glyphicon glyphicon-remove-sign" style="color: rgb(255, 0, 0); font-size: 16px;"></span></a></td>';
+					}else{
+						temp += "<td></td>";
+					}
+					temp += "</tr>";
+				}
+				$("#dataInfo tr").remove();
+				$("#dataInfo").html(temp); 
+				choosePage(data);
+			}
+		});
+	}
+	
+	//choosePage
+	function choosePage(data){
+		$('.M-box3').pagination({
+			pageCount:data.totalPage,
+			current:data.currentPageNo,
+			isHide : false,
+			jump : true,
+			coping : true,
+			count : 3,
+			showData : 5,
+			homePage : '首页',
+			endPage : '末页',
+			prevContent : '上页',
+			nextContent : '下页',
+			callback : function(api) {
+				//将选择的页码传给AJAX
+				var currentPageNo = api.getCurrent();
+				flagPage = currentPageNo;
+				showGoods(currentPageNo);
+			}
+		})
+	}
+	
+	//下架商品
+	function freezeGoods(goodsId,rootStatus){
+		var newStatus;
+		if("出售中"==rootStatus){
+			var flag = confirm("确认下架此商品?");
+			if(!flag)
+				return false;
+			newStatus = "已下架";
+		}else{
+			var flag = confirm("确认上架此商品?");
+			if(!flag)
+				return false;
+			newStatus = "出售中";
+		}
+		
+		$.ajax({
+			type : "post", //提交方式 
+			url : "/graduation_project/manage_freezeGoods",//路径
+			dateType : "JSON",//返回的数据类型
+			data : {
+				"goodsId":goodsId,
+				"status":newStatus
+			},
+			success : function(data) {
+				if("success"==data){
+					showGoods(1);
+				}else{
+					alert("系统异常！")
+				}
+			}
+		});
+		
+	}
+	
+	</script>
+	
+  </body>
+</html>

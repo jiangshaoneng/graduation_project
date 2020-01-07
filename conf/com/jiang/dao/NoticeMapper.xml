@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+ <mapper namespace="com.jiang.dao.NoticeMapper">
+ 	
+ 	<sql id="baseColum">
+ 		notice_id,notice_title,notice_info,notice_address,
+ 		DATE_FORMAT(notice_addtime,'%Y-%m-%d') as notice_addtime,notice_admin
+ 	</sql>
+ 	
+ 	<!-- /**查询公告的数量*/ -->
+ 	<select id="findNoticeCounts" resultType="int">
+ 		SELECT COUNT(*) FROM jsn_notice
+ 	</select>
+ 	
+ 	<!-- 分页查询公告 -->
+ 	<select id="findNoticeByPage" resultType="com.jiang.beans.Notice">
+ 		SELECT <include refid="baseColum"/>
+ 		FROM jsn_notice ORDER BY notice_addtime DESC LIMIT #{0},#{1}
+ 	</select>
+ 	
+ 	
+ 	<select id="managefindNoticeCount" resultType="int" parameterType="Map">
+ 		SELECT count(*)
+ 		FROM jsn_notice WHERE 1 = 1
+ 		<if test="startTime!=null">
+ 			and notice_addtime &gt;= #{startTime}
+ 		</if>
+ 		<if test="endTime!=null">
+ 			and notice_addtime &lt;= #{endTime}
+ 		</if>
+ 		<if test="noticeInfo!=null">
+ 			and (notice_title like #{noticeInfo} or notice_info like #{noticeInfo})
+ 		</if>
+ 	</select>
+ 	
+ 	<select id="managefindNotice" resultType="com.jiang.beans.Notice" parameterType="Map">
+ 		SELECT <include refid="baseColum"/>
+ 		FROM jsn_notice WHERE 1 = 1
+ 		<if test="startTime!=null">
+ 			and notice_addtime &gt;= #{startTime}
+ 		</if>
+ 		<if test="endTime!=null">
+ 			and notice_addtime &lt;= #{endTime}
+ 		</if>
+ 		<if test="noticeInfo!=null">
+ 			and (notice_title like #{noticeInfo} or notice_info like #{noticeInfo})
+ 		</if>
+ 		ORDER BY notice_addtime DESC LIMIT #{currentPageStart},#{currentPageNum}
+ 	</select>
+ 	
+ 	<!-- 新增一条公告 -->
+ 	<insert id="addNotice">
+ 		insert into jsn_notice (notice_id,notice_title,notice_info,notice_address,notice_addtime,notice_admin) 
+ 		values(#{noticeId},#{noticeTitle},#{noticeInfo},#{noticeAddress},SYSDATE(),#{noticeAdminId})
+ 	</insert>
+ 	 	
+ 	 <!-- 删除一条公告 -->
+ 	 <delete id="delNotice">
+ 	 	delete from jsn_notice where notice_id = #{noticeId}
+ 	 </delete>
+ 	 	
+ </mapper>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+ <mapper namespace="com.jiang.dao.ImagesMapper">
+ 	
+ 	<!-- /**通过商品的编号查找主图*/ -->
+ 	<select id="findImgByGoodsId" resultType="com.jiang.beans.Images">
+ 		SELECT MIN(img_id) as img_id,img_url FROM jsn_images WHERE img_goods = #{imgGoods}
+ 	</select>
+ 	
+ 	<!-- /**通过商品的编号该商品所有图*/ -->
+ 	<select id="findAllImgByGoodsId" resultType="com.jiang.beans.Images">
+ 		SELECT img_id,img_url FROM jsn_images WHERE img_goods = #{imgGoods}
+ 	</select>
+ 	
+ 	<!-- /**新增一组图片*/ -->
+ 	<insert id="addImgs" >
+ 		INSERT INTO jsn_images (img_id,img_url,img_goods) VALUES 
+ 		<foreach collection="imgs" item="img" separator=",">
+ 			(#{img.imgId},#{img.imgUrl},#{img.imgGoodsId})	
+ 		</foreach>
+ 	</insert>
+ 	
+ 	<!-- /**修改图片*/ -->
+ 	<update id="updateImg">
+ 		UPDATE jsn_images SET img_url=#{imgUrl}
+ 	</update>
+ 	
+ 	<!-- 删除,一或多张 图片通过imgsId -->
+ 	<delete id="delImgsByIds">
+ 		delete from jsn_images where img_id in 
+ 		(<foreach collection="imgIdList" item="imgId" separator=",">#{imgId}</foreach>)
+ 	</delete>
+ </mapper>

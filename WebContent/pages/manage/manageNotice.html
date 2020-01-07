@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>公告管理</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.css" rel="stylesheet">
+	<link type="text/css" href="css/pagination.css" rel="stylesheet" />
+    <!-- Add custom CSS here -->
+    <link href="css/sb-admin.css" rel="stylesheet">
+    <link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
+    <!-- Page Specific CSS -->
+    <link rel="stylesheet" href="css/morris-0.4.3.min.css">
+  </head>
+
+  <body>
+
+    <div id="wrapper">
+
+      <!-- Sidebar -->
+      <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <span id="admin"></span>
+        </div>
+        <div class="collapse navbar-collapse navbar-ex1-collapse">
+          <ul class="nav navbar-nav side-nav">
+            <li class="active"><a href="manageNotice.html"><span class="glyphicon glyphicon-bullhorn"></span> 公告管理</a></li>
+            <li><a href="manageCustomer.html"><span class="glyphicon glyphicon-user"></span> 用户管理</a></li>
+            <li><a href="manageGoods.html"><span class="glyphicon glyphicon glyphicon-align-justify"></span></i> 商品管理</a></li>
+            <li><a href="manageOrderopt.html"><span class="glyphicon glyphicon-list-alt"></span> 订单管理</a></li>
+          </ul>
+        </div>
+      </nav>
+      <div id="page-wrapper">
+		<!-- 查询条件 -->
+		<div class="col-lg-12">
+			<!-- <form class="form-inline" role="form"> -->
+			<div class="form-group col-lg-2">
+			    <input type="text" class="form-control" id="noticeInfo" placeholder="公告内容">
+			  </div>
+			  <div class="form-group col-lg-3">
+			    <input type="date" class="form-control" id="startTime">
+			  </div>
+			  <div class="form-group col-lg-3">
+			    <input type="date" class="form-control" id="endTime">
+			  </div>
+			 <div class="form-group col-lg-2">
+				  <button type="button" class="btn btn-block btn-primary" onclick="showNotices(1)">查询</button>
+			  </div>
+			  <div class="form-group col-lg-2">
+				  <button type="button" class="btn btn-block btn-success" onclick="showAddNotice()">发布公告</button>
+			  </div>
+			<!-- </form> -->
+		</div>
+		<hr>
+		<!-- 查询结果 -->
+		<div class="col-lg-12">
+			<div class="table-responsive">
+              <table class="table table-bordered table-hover tablesorter">
+                <thead>
+                  <tr>
+                    <th width="20%">标题</th>
+                    <th width="60%">内容</th>
+                    <th width="15%">发布时间</th>
+                    <th width="5%">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="dataInfo"></tbody>
+              </table>
+             </div>
+			<div class="M-box3" style="margin: 10px auto; width: 80%;"></div>
+		</div>
+	 </div>
+    </div>
+	
+	<div class="modal fade" id="addNotice" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	    <div class="modal-dialog">
+	        <div class="modal-content">
+	            <div class="modal-header">
+	                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	                <h4 class="modal-title" id="myModalLabel">发布公告</h4>
+	            </div>
+	            <div class="modal-body">
+					<form class="bs-example bs-example-form" role="form">
+						  <div class="input-group">
+						      <span class="input-group-addon">公告名称</span>
+						      <input  style="margin: 0px" type="text" id="newNoticeTitle" class="form-control" placeholder="输入公告名称">
+						  </div>
+						  <br>
+						  <div class="input-group">
+						      <span class="input-group-addon">公告内容</span>
+						       <textarea class="form-control" id="newNoticeInfo" placeholder="输入公告名称" style="resize: none; height: 100px;"></textarea>
+						  </div>
+						  <br>
+					</form>
+				</div>
+	            <div class="modal-footer">
+	                <button type="button" class="btn btn-primary" onclick="addNotice()">发布公告</button>
+	                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+	            </div>
+	        </div><!-- /.modal-content -->
+	    </div><!-- /.modal -->
+	</div>
+	
+    <!-- JavaScript -->
+    <script src="js/jquery-1.9.1.min.js"></script>
+    <script src="js/bootstrap.js"></script>
+	<script type="text/javascript" src="js/jquery.pagination.js"></script>
+	
+	<script type="text/javascript">
+		$(function(){
+			getSessionInfo();
+			showNotices(1);
+		})
+		
+		//获取admin信息
+		function getSessionInfo(){
+			$.ajax({
+				type : "post", //提交方式 
+				url : "/graduation_project/manage_getSession",//路径
+				dateType : "JSON",//返回的数据类型
+				data : {},
+				success : function(data) {
+					if(typeof(data.adminName)!="undefined"){
+						var temp = "<span class='navbar-brand'>管理员："+data.adminName+"</span>";
+						temp += "<a class='navbar-brand' href='/graduation_project/manage_logout'>安全退出</a>";
+						$("#admin").html(temp);
+					}
+					
+				}
+			});
+		}
+		
+		//ajax分页查询
+		function showNotices(currentPageNo){
+			//获取查询条件
+			var noticeInfo = $("#noticeInfo").val();
+			var startTime = $("#startTime").val();
+			var endTime = $("#endTime").val();
+			$.ajax({
+				type : "post", //提交方式 
+				url : "/graduation_project/manage_findNotice",//路径
+				dateType : "JSON",//返回的数据类型
+				data : {
+					"noticeInfo":noticeInfo,
+					"startTime":startTime,
+					"endTime":endTime,
+					"pageNo" : currentPageNo
+				},
+				success : function(data) {
+					console.log(data);
+					var notices = data.list;
+					var temp = "";
+					for(var index in notices){
+						temp += "<tr>";
+						temp += "<td>"+notices[index].noticeTitle+"</td>";
+						temp += "<td>"+notices[index].noticeInfo+"</td>";
+						temp += "<td>"+notices[index].noticeAddtime+"</td>";
+						temp += '<td><a href="javaScript:void(0);" onclick=delNotice('+"'"+notices[index].noticeId+"'"+')><span class="glyphicon glyphicon-trash"></span></a></td>';
+						temp += "</tr>";
+					}
+					$("#dataInfo tr").remove();
+					$("#dataInfo").html(temp); 
+					choosePage(data);
+				}
+			});
+		}
+		
+		//choosePage
+		function choosePage(data){
+			$('.M-box3').pagination({
+				pageCount:data.totalPage,
+				current:data.currentPageNo,
+				isHide : false,
+				jump : true,
+				coping : true,
+				count : 3,
+				showData : 5,
+				homePage : '首页',
+				endPage : '末页',
+				prevContent : '上页',
+				nextContent : '下页',
+				callback : function(api) {
+					//将选择的页码传给AJAX
+					var currentPageNo = api.getCurrent();
+					flagPage = currentPageNo;
+					showNotices(currentPageNo);
+				}
+			})
+		}
+		
+		//显示模态框
+		function showAddNotice(){
+			$("#addNotice").modal("show");
+		}
+		
+		//发布公告
+		function addNotice(){
+			var newNoticeTitle = $("#newNoticeTitle").val();
+			var newNoticeInfo = $("#newNoticeInfo").val();
+			console.log(newNoticeTitle+newNoticeInfo);
+			$.ajax({
+				type : "post", //提交方式 
+				url : "/graduation_project/manage_addNotice",//路径
+				dateType : "JSON",//返回的数据类型
+				data : {
+					"newNoticeTitle":newNoticeTitle,
+					"newNoticeInfo":newNoticeInfo
+				},
+				success : function(data) {
+					showNotices(1);
+					$("#addNotice").modal("hide");
+				}
+			});
+		}
+		
+		function delNotice(noticeId){
+			var flag = confirm("确认删除此公告");
+			if(!flag)
+				return false;
+			$.ajax({
+				type : "post", //提交方式 
+				url : "/graduation_project/manage_delNotice",//路径
+				dateType : "JSON",//返回的数据类型
+				data : {
+					"noticeId":noticeId
+				},
+				success : function(data) {
+					showNotices(1);
+				}
+			});
+		}
+	</script>
+
+  </body>
+</html>

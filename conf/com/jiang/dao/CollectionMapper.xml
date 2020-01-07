@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+ 
+ <mapper namespace="com.jiang.dao.CollectionMapper">
+ 	
+ 	<!-- /**查询出该用户收藏的所有商品信息*/ -->
+ 	<resultMap type="com.jiang.beans.Collection" id="myCollection">
+ 		<id column="collection_id" property="collectionId"/>
+ 		<result column="collection_addtime" property="collectionAddtime"/>
+ 		
+ 		<association property="collectionGoods" 
+ 			select="com.jiang.dao.GoodsMapper.findGoodsById" column="collection_goods">
+ 		</association>
+ 	</resultMap>
+ 	<select id="findCollectionByCusId" resultMap="myCollection">
+ 		SELECT collection_id,collection_addtime,collection_goods,collection_customer
+ 		FROM jsn_collection WHERE collection_customer = #{cusId} ORDER BY collection_addtime DESC 
+ 		LIMIT #{currentPageStart},#{currentPageNum}
+ 	</select>
+ 	
+ 	<!-- /**查询出用户所收藏商品的数量*/ countCollectionByCusId -->
+ 	<select id="countCollectionByCusId" resultType="int">
+ 		SELECT count(*) FROM jsn_collection 
+ 		WHERE collection_customer = #{cusId}
+ 	</select>
+ 	
+ 	<!-- /**根据用户的编号和商品的编号：查询出是否收藏了此商品*/ -->
+ 	<select id="findByCusIdAndGoodsId" resultType="com.jiang.beans.Collection">
+ 		SELECT collection_id,collection_addtime,collection_goods,collection_customer
+ 		FROM jsn_collection WHERE collection_customer = #{0} AND collection_goods = #{1}
+ 	</select>
+ 
+ 	<!-- /**添加一对收藏关系*/ -->
+ 	<insert id="addCollection" parameterType="Map">
+ 		INSERT INTO 
+			jsn_collection(collection_id,collection_goods,collection_addtime,collection_customer) 
+		VALUES
+			(#{collectionId},#{goodsId},SYSDATE(),#{cusId});
+ 	</insert>
+ 	
+ 	<!-- /**取消一对收藏关系*/ -->
+ 	<delete id="removeCollection">
+ 		DELETE FROM jsn_collection WHERE collection_customer = #{0} AND collection_goods = #{1}
+ 	</delete>
+ 	
+ 	
+ </mapper>
