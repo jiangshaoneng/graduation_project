@@ -16,9 +16,9 @@ public class SendJMail {
 		String from = "846762523@qq.com"; 				// 邮件发送人的邮件地址
 		String to = email; 									// 邮件接收人的邮件地址
 /*		final String username = "15673219519@163.com";  	//发件人的邮件帐户
-		final String password = "jsn15673219519";   		//发件人的邮件密码
+		final String password = "xxxxxxxxxx";   		//发件人的邮件密码
 */		final String username = "846762523@qq.com";  	//发件人的邮件帐户
-		final String password = "gngydzshlomibceb";   		//发件人的邮件密码
+		final String password = "xxxxxxxxxx";   		//发件人的邮件密码
 
 		//定义Properties对象,设置环境信息
 		Properties props = System.getProperties();
